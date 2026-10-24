@@ -148,7 +148,14 @@ export default function Index() {
       <s-button slot="primary-action" onClick={generateProduct}>
         Generate a product
       </s-button>
-
+<s-section heading="Shared Inventory Pool">
+  <s-paragraph>
+    Manage shared inventory across product variants.
+  </s-paragraph>
+  <s-link href="/app/inventory-pool">
+    Open Inventory Pools
+  </s-link>
+</s-section>
       <s-section heading="Congrats on creating a new Shopify app 🎉">
         <s-paragraph>
           This embedded app template uses{" "}
