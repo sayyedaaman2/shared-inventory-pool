@@ -32,3 +32,29 @@ model Session {
   refreshToken        String?
   refreshTokenExpires DateTime?
 }
+
+
+model InventoryPool {
+  id        String   @id @default(cuid())
+  shop      String
+  productId String
+  totalQty  Int      @default(0)
+  variants  InventoryPoolVariant[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([shop, productId])
+  @@index([shop])
+  @@index([productId])
+}
+
+model InventoryPoolVariant {
+  id           String        @id @default(cuid())
+  poolId       String
+  pool         InventoryPool @relation(fields: [poolId], references: [id], onDelete: Cascade)
+  variantId    String
+  allocatedQty Int           @default(0)
+
+  @@unique([poolId, variantId])
+  @@index([variantId])
+}
