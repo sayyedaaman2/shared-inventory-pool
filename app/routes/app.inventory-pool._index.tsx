@@ -43,11 +43,11 @@ export async function loader({ request }: LoaderFunctionArgs) {
   );
 
   // Fetch pool status for all products concurrently
-  const poolPromises = products.map((product) =>
+  const poolPromises = products.map((product: { id: string }) =>
     getPool(product.id, product.id.split("/").pop() || "")
       .then((pool) => {
         if (pool) {
-          const idx = products.findIndex((p) => p.id === product.id);
+          const idx = products.findIndex((p: { id: string }) => p.id === product.id);
           if (idx !== -1) {
             products[idx].hasPool = true;
           }
