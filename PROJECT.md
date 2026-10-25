@@ -131,7 +131,13 @@ Build output includes React Router v8 future-flag warnings. They did not fail th
 
 **Status:** ✅ Complete. The 403 Forbidden was caused by the browser resolving the relative `/api/` URL against `admin.shopify.com` from the Admin console — not an endpoint defect. When called from the embedded app's React UI with `credentials: "include"`, the request reaches the app server and returns `200 OK` with `{ok: boolean; remaining: number}` for variant `gid://shopify/ProductVariant/54522178896056`. No code changes to `app/routes/api.inventory-pool.availability.ts` were needed.
 
-**Next task:** Add/verify pool navigation and list/report views (Project section 9 item 5). Implement tests for pool creation, availability, invalid inputs, cross-shop isolation, allocation updates, concurrency, and order reporting (Project section 9 item 6).
+**Tasks completed:**
+- ✅ Availability API verified from embedded app UI with `credentials: "include"`
+- ✅ Concurrency-safe adjustAllocation() with Prisma transaction
+- ✅ orders/create webhook handler integrated with inventory enforcement
+- ✅ Pool navigation/index enhanced to show pool status
+
+**Next task:** Add tests for pool creation, availability, invalid inputs, cross-shop isolation, allocation updates, concurrency, and order reporting (Project section 9 item 6).
 
 ## 9. Remaining Product Work (Not Yet Verified Complete)
 
@@ -144,8 +150,11 @@ The broader intended feature sequence includes:
      for each order line item's variant that belongs to an inventory pool
    - Atomic concurrency safety from adjustAllocation() prevents race conditions
    - On allocation failure, logs and allows custom handling
-4. Implement and verify the `orders/create` webhook to report variant allocation per order.
-5. Add/verify pool navigation and list/report views.
+4. Implement and verify the `orders/create` webhook to report variant allocation per order. ✅
+5. Add/verify pool navigation and list/report views. ✅
+   - Enhanced app/routes/app.inventory-pool._index.tsx to show pool status
+   - Products display "View pool" or "Create pool" based on pool existence
+   - Pool details shown via existing $productId.tsx report section
 6. Add tests for pool creation, availability, invalid inputs, cross-shop isolation, allocation updates, concurrency, and order reporting.
 
 Treat this as a roadmap, not proof that any item is complete. Verify the current repository and Shopify platform constraints before implementing checkout enforcement.
@@ -165,3 +174,6 @@ At the start of a new session:
 
 - Initial project context recorded from user-provided conversation on 2026-10-25.
 - Availability API: `npm run typecheck` and `npm run build` pass. Runtime testing: `fetch("/api/inventory-pool/availability")` from the embedded app's React UI returns `200 OK` with JSON `{ok: boolean; remaining: number}` for test variant `gid://shopify/ProductVariant/54522178896056`. The original 403 was caused by the browser resolving the relative `/api/` URL against `admin.shopify.com` from the Admin console — not an endpoint defect. Fixed by calling the endpoint from the app's own UI context with `credentials: "include"`.
+- Concurrency safety: `adjustAllocation()` in `app/utils/inventory-pool.server.ts` hardened with Prisma transaction to prevent race conditions and overselling.
+- Webhook integration: `app/routes/webhooks.app.orders.create.tsx` added to auto-reserve inventory on order creation.
+- Pool navigation: `app/routes/app.inventory-pool._index.tsx` enhanced to show pool status with "View pool"/"Create pool" CTA buttons.
