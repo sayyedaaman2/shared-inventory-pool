@@ -42,15 +42,15 @@ export async function loader({ request }: LoaderFunctionArgs) {
     },
   );
 
+  // Build lookup map for O(1) product ID lookups
+  const productMap = new Map(products.map((p) => [p.id, p]));
+
   // Fetch pool status for all products concurrently
   const poolPromises = products.map((product: { id: string }) =>
     getPool(product.id, product.id.split("/").pop() || "")
       .then((pool) => {
-        if (pool) {
-          const idx = products.findIndex((p: { id: string }) => p.id === product.id);
-          if (idx !== -1) {
-            products[idx].hasPool = true;
-          }
+        if (pool && productMap.has(product.id)) {
+          productMap.get(product.id).hasPool = true;
         }
         return product;
       })
