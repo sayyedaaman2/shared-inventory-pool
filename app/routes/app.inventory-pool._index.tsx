@@ -94,9 +94,15 @@ export default function InventoryPoolIndex() {
                     </s-text>
                   </s-box>
                   {product.hasPool ? (
-                    <s-button tone="critical" href={`/app/inventory-pool/${encodeURIComponent(product.id)}`}>
-                      View pool
-                    </s-button> :
+                    <>
+                      <s-button tone="critical" href={`/app/inventory-pool/${encodeURIComponent(product.id)}`}>
+                        View pool
+                      </s-button>
+                      <s-button href={`/app/inventory-pool/${encodeURIComponent(product.id)}`}>
+                        Create pool
+                      </s-button>
+                    </>
+                  ) : (
                     <s-button href={`/app/inventory-pool/${encodeURIComponent(product.id)}`}>
                       Create pool
                     </s-button>
