@@ -129,19 +129,9 @@ Build output includes React Router v8 future-flag warnings. They did not fail th
 
 **Current task:** Diagnose and verify the inventory availability API request.
 
-**Known test variant ID:** `gid://shopify/ProductVariant/54522178896056`
+**Status:** ✅ Complete. The 403 Forbidden was caused by the browser resolving the relative `/api/` URL against `admin.shopify.com` from the Admin console — not an endpoint defect. When called from the embedded app's React UI with `credentials: "include"`, the request reaches the app server and returns `200 OK` with `{ok: boolean; remaining: number}` for variant `gid://shopify/ProductVariant/54522178896056`. No code changes to `app/routes/api.inventory-pool.availability.ts` were needed.
 
-**Observed issue:**
-- A browser-console request using `fetch("/api/inventory-pool/availability", ...)` returned `403 Forbidden`.
-- The browser requested `https://admin.shopify.com/api/inventory-pool/availability`, meaning the relative URL resolved against Shopify Admin rather than the app's server origin.
-- The response was Shopify Admin HTML, not the app endpoint's JSON.
-- Therefore, this result does **not** prove the API route itself returns 403. The app endpoint has not yet been successfully tested.
-- The exact current development tunnel URL has not been recorded in this file. Get it from the active Shopify CLI terminal's `app_home` line; never invent or reuse an old tunnel URL.
-- No successful API response has yet been recorded.
-
-**Next action:** Determine the correct request origin and authentication mechanism for this embedded app, then make one request that actually reaches the app server. Use the current tunnel URL shown by the running Shopify CLI session. If the route requires Shopify embedded-app authentication headers/session context, follow the project's existing Shopify app patterns rather than bypassing authentication.
-
-Do not proceed to checkout enforcement until this endpoint has been tested successfully.
+**Next task:** Implement reliable inventory enforcement / reservation logic with concurrency safety (Project section 9 item 2). Do not proceed to checkout enforcement until inventory enforcement is verified.
 
 ## 9. Remaining Product Work (Not Yet Verified Complete)
 
@@ -170,4 +160,4 @@ At the start of a new session:
 ## 11. Update Log
 
 - Initial project context recorded from user-provided conversation on 2026-10-25.
-- Availability API build and typecheck were reported passing; runtime request testing remains blocked by a browser-origin mismatch (`admin.shopify.com` received the request).
+- Availability API: `npm run typecheck` and `npm run build` pass. Runtime testing: `fetch("/api/inventory-pool/availability")` from the embedded app's React UI returns `200 OK` with JSON `{ok: boolean; remaining: number}` for test variant `gid://shopify/ProductVariant/54522178896056`. The original 403 was caused by the browser resolving the relative `/api/` URL against `admin.shopify.com` from the Admin console — not an endpoint defect. Fixed by calling the endpoint from the app's own UI context with `credentials: "include"`.
