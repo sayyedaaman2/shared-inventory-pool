@@ -190,21 +190,19 @@ export async function adjustAllocation(
       throw new PoolError("VARIANT_NOT_IN_POOL", "Variant does not belong to this inventory pool.");
     }
 
-    const totalAllocated = pool.variants.reduce(
+    const totalAllocatedCurrent = pool.variants.reduce(
       (total, item) => total + item.allocatedQty,
       0,
     );
 
-    const nextVariantAllocation = variant.allocatedQty + delta;
-    const nextTotalAllocated = totalAllocated + delta;
-
-    if (nextVariantAllocation < 0 || nextTotalAllocated < 0) {
+    if (variant.allocatedQty + delta < 0) {
       throw new PoolError(
         "INSUFFICIENT_INVENTORY",
         "Allocation cannot become negative.",
       );
     }
 
+    const nextTotalAllocated = totalAllocatedCurrent + delta;
     if (nextTotalAllocated > pool.totalQty) {
       throw new PoolError(
         "INSUFFICIENT_INVENTORY",
@@ -217,9 +215,18 @@ export async function adjustAllocation(
       data: { allocatedQty: { increment: delta } },
     });
 
+    const updatedPool = await tx.inventoryPool.findUnique({
+      where: { id: poolId },
+      include: { variants: true },
+    });
+
+    if (!updatedPool) {
+      throw new PoolError("POOL_NOT_FOUND", "Inventory pool not found after update.");
+    }
+
     return {
       success: true,
-      remaining: pool.totalQty - nextTotalAllocated,
+      remaining: updatedPool.totalQty - nextTotalAllocated,
     };
   });
 }
