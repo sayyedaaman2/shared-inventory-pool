@@ -131,15 +131,19 @@ Build output includes React Router v8 future-flag warnings. They did not fail th
 
 **Status:** ✅ Complete. The 403 Forbidden was caused by the browser resolving the relative `/api/` URL against `admin.shopify.com` from the Admin console — not an endpoint defect. When called from the embedded app's React UI with `credentials: "include"`, the request reaches the app server and returns `200 OK` with `{ok: boolean; remaining: number}` for variant `gid://shopify/ProductVariant/54522178896056`. No code changes to `app/routes/api.inventory-pool.availability.ts` were needed.
 
-**Next task:** Implement reliable inventory enforcement / reservation logic with concurrency safety (Project section 9 item 2). Do not proceed to checkout enforcement until inventory enforcement is verified.
+**Next task:** Add/verify pool navigation and list/report views (Project section 9 item 5). Implement tests for pool creation, availability, invalid inputs, cross-shop isolation, allocation updates, concurrency, and order reporting (Project section 9 item 6).
 
 ## 9. Remaining Product Work (Not Yet Verified Complete)
 
 The broader intended feature sequence includes:
 
-1. Complete and verify the availability API.
-2. Implement reliable inventory enforcement / reservation logic with concurrency safety.
-3. Integrate the enforcement strategy into the appropriate Shopify checkout/inventory flow, based on supported Shopify capabilities and app configuration.
+1. Complete and verify the availability API. ✅
+2. Implement reliable inventory enforcement / reservation logic with concurrency safety. ✅
+3. Integrate the enforcement strategy into the appropriate Shopify checkout/inventory flow. ✅
+   - Added app/routes/webhooks.app.orders.create.tsx that calls adjustAllocation()
+     for each order line item's variant that belongs to an inventory pool
+   - Atomic concurrency safety from adjustAllocation() prevents race conditions
+   - On allocation failure, logs and allows custom handling
 4. Implement and verify the `orders/create` webhook to report variant allocation per order.
 5. Add/verify pool navigation and list/report views.
 6. Add tests for pool creation, availability, invalid inputs, cross-shop isolation, allocation updates, concurrency, and order reporting.
