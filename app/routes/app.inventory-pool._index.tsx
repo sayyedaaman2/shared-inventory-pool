@@ -1,7 +1,7 @@
-
 import type { LoaderFunctionArgs } from "react-router";
 import { useLoaderData } from "react-router";
 import { authenticate } from "../shopify.server";
+import { getPool } from "../utils/inventory-pool.server";
 
 export async function loader({ request }: LoaderFunctionArgs) {
   const { admin } = await authenticate.admin(request);
@@ -24,17 +24,41 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   const result = await response.json();
 
+  // Load pool status for each product
+  const products = (result.data?.products?.edges ?? []).map(
+    (edge: {
+      node: {
+        id: string;
+        title: string;
+        status: string;
+        totalInventory: number | null;
+      };
+    }) => {
+      const productId = edge.node.id;
+      return {
+        ...edge.node,
+        hasPool: false,
+      };
+    },
+  );
+
+  // Fetch pool status for all products concurrently
+  const poolPromises = products.map((product) =>
+    getPool(product.id, product.id.split("/").pop() || "")
+      .then((pool) => {
+        if (pool) {
+          const idx = products.findIndex((p) => p.id === product.id);
+          if (idx !== -1) {
+            products[idx].hasPool = true;
+          }
+        }
+        return product;
+      })
+  );
+  await Promise.all(poolPromises);
+
   return {
-    products: (result.data?.products?.edges ?? []).map(
-      (edge: {
-        node: {
-          id: string;
-          title: string;
-          status: string;
-          totalInventory: number | null;
-        };
-      }) => edge.node,
-    ),
+    products,
   };
 }
 
@@ -49,12 +73,12 @@ export default function InventoryPoolIndex() {
         ) : (
           <s-stack direction="block" gap="base">
             {products.map((product: {
-  id: string;
-  title: string;
-  status: string;
-  totalInventory: number | null;
-}) => (
-             
+              id: string;
+              title: string;
+              status: string;
+              totalInventory: number | null;
+              hasPool: boolean;
+            }) => (
               <s-box
                 key={product.id}
                 padding="base"
@@ -69,11 +93,14 @@ export default function InventoryPoolIndex() {
                       {product.totalInventory ?? 0}
                     </s-text>
                   </s-box>
-                  <s-button
-                    href={`/app/inventory-pool/${encodeURIComponent(product.id)}`}
-                  >
-                    Manage pool
-                  </s-button>
+                  {product.hasPool ? (
+                    <s-button tone="critical" href={`/app/inventory-pool/${encodeURIComponent(product.id)}`}>
+                      View pool
+                    </s-button> :
+                    <s-button href={`/app/inventory-pool/${encodeURIComponent(product.id)}`}>
+                      Create pool
+                    </s-button>
+                  )}
                 </s-stack>
               </s-box>
             ))}
